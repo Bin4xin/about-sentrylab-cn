@@ -1,0 +1,67 @@
+# Content Related
+mirror_desc:
+  - name: Struts2Deser
+    desc: Struts2反序列化远程代码执行
+  - name: ShiroDeser
+    desc: Shiro反序列化远程代码执行
+  - name: SpringBoot-Memory-files-heapdump-Analysis
+    desc: SpringBoot内存文件泄漏与分析
+  - name: Dynamic-analysis-of-java-framework-code
+    desc: 关于java框架代码动态调试的理解
+  - name: Mod-Waf-Bypass-Walkthrough
+    desc: 老牌Waf绕过历程
+
+
+
+new_mirrors:
+  - Mod-Waf-Bypass-Walkthrough
+  - SpringBoot-Memory-files-heapdump-Analysis
+  - Dynamic-analysis-of-java-framework-code
+
+unlisted_mirrors:
+  - status: 'success'
+    last_update: '2021-02-05 16:21:45 +0800'
+    last_update_ts: '1609697421'
+    name: "ShiroDeser"
+    url: '/help/ShiroDeser/'
+
+  - status: 'success'
+    last_update: '2021-02-05 12:37:56 +0800'
+    last_update_ts: '1604716401'
+    name: "Struts2Deser"
+    url: '/help/Struts2Deser/'
+
+  - status: 'success'
+    last_update: '-'
+    last_update_ts: '1606194681'
+    name: "SpringBoot-Memory-files-heapdump-Analysis"
+    url: "/help/SpringBoot-Memory-files-heapdump-Analysis/"
+
+  - status: 'success'
+    last_update: '-'
+    last_update_ts: '1609319481'
+    name: "Dynamic-analysis-of-java-framework-code"
+    url: "/help/Dynamic-analysis-of-java-framework-code/"
+
+  - status: 'success'
+    last_update: '-'
+    last_update_ts: '1610242941'
+    name: "Mod-Waf-Bypass-Walkthrough"
+    url: '/help/Mod-Waf-Bypass-Walkthrough/'
+
+
+
+
+force_redirect_help_mirrors:
+  -
+
+force_show_help_mirrors:
+  -
+
+label_map:
+  unknown: label-default
+  syncing: label-info
+  success: label-success
+  fail: label-warning
+  failed: label-warning
+  paused: label-warning

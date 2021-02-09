@@ -1,0 +1,68 @@
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="{{ site.title }}，这是一个与哨兵安全相关的简述。">
+<meta name="keywords" content="网络安全,哨兵安全,Cyber Security,Open Source">
+<meta name="author" content="Sentry Security">
+<link rel="shortcut icon" href="/static/img/favicon.png">
+<title>{% if page.mirrorid %} {{ page.mirrorid }} |{% elsif page.title %} {{ page.title }} |{% endif %}{% if include.cattitle %} {{ include.cattitle }} |{% endif %}{% if (page.title || include.cattitle) %}{{" "}}{% endif %}{{ site.title }}{% if site.brand %} | {{ site.brand }}{% endif %}</title>
+<link rel="stylesheet" href="/static/css/bootstrap.css">
+<link rel="stylesheet" href="/static/css/bootstrap-select.min.css">
+<link rel="stylesheet" href="/static/css/font-awesome.min.css" >
+<link rel="stylesheet" href="/static/css/spinkit.css">
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/bootstrap-select.min.js"></script>
+{% unless page.legacy %}
+<script src="/static/js/vue.min.js"></script>
+<script src="/static/js/timeago.min.js"></script>
+{% endunless %}
+<script src="/static/js/markup.min.js"></script>
+<script src="/static/js/webfont.js"></script>
+<script src="/static/js/thuhidden.js"></script>
+{% if page.legacy %}
+<style>
+.container {
+	width: 85%;
+}
+.container > .navbar-header {
+	margin-right: 0;
+	margin-left: 0;
+}
+.navbar-nav {
+	float: left;
+	margin: 0;
+}
+.navbar-nav > li {
+	float: left;
+}
+.navbar-nav > li > a {
+	padding-top: 15px;
+	padding-bottom: 15px;
+}
+.navbar-nav.navbar-right:last-child {
+	margin-right: -15px;
+}
+.navbar-left {
+	float: left !important;
+}
+.navbar-right {
+	float: right !important;
+}
+.navbar-header:after {
+	clear: none;
+}
+a.navbar-brand {
+	width: 20em;
+}
+<!--[if lte IE 7]>
+.col-xs-1,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9,
+.col-xs-10,.col-xs-11,.col-xs-12 {
+	padding: 0px;
+}
+<![endif]-->
+</style>
+{% endif %}
+</head>

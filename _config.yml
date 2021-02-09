@@ -1,0 +1,50 @@
+# Welcome to Jekyll!
+#
+# This config file is meant for settings that affect your whole blog, values
+# which you are expected to set up once and rarely need to edit after that.
+# For technical reasons, this file is *NOT* reloaded automatically when you use
+# 'jekyll serve'. If you change this file, please restart the server process.
+
+# Site settings
+title: ©「哨兵」
+# school: 清华大学
+brand: Sentry Security
+operator: 哨兵安全实验室
+logo: true
+meow_404: true
+issue_tag: tuna
+baseurl: "" # the subpath of your site, e.g. /blog
+permalink: "/:categories/:title/"
+url: "https://www.sentrylab.cn"
+hostname: "about.sentrylab.cn"
+#urlv4: "https://mirrors4.tuna.tsinghua.edu.cn"
+#urlv6: "https://mirrors6.tuna.tsinghua.edu.cn"
+#aosp: "aosp.tuna.tsinghua.edu.cn"
+#arch_archive: "arch-archive.tuna.tsinghua.edu.cn"
+#aur: "aur.tuna.tsinghua.edu.cn"
+#pypi: "pypi.tuna.tsinghua.edu.cn"
+homelink: "https://www.sentrylab.cn"
+hide_navbar: false
+hide_download: false
+hide_server_status: false
+
+# Build settings
+highlighter: rouge
+markdown: kramdown
+kramdown:
+    input: GFM
+    hard_wrap: false
+
+
+sass:
+    sass_dir: static/css
+
+gems:
+    - jekyll-babel
+    - jekyll-sitemap
+
+babel_js_extensions: 'es6'
+
+exclude: [Gemfile, Gemfile.lock, README.md, gen_robot.sh, vendor, geninfo/, gen_robot.sh, gen_desc.py, Dockerfile*]
+
+# vim: ts=2 sts=2 sw=2 expandtab

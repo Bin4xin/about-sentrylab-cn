@@ -1,0 +1,231 @@
+<h1 id="思路heapdump文件分析历程">思路：heapdump文件分析历程</h1>
+
+<h2 id="目录">目录</h2>
+<ul>
+  <li><a href="#%E6%80%9D%E8%B7%AFheapdump%E6%96%87%E4%BB%B6%E5%88%86%E6%9E%90%E5%8E%86%E7%A8%8B">思路：heapdump文件分析历程</a></li>
+  <li><a href="#%E7%9B%AE%E5%BD%95">目录</a></li>
+  <li><a href="#%E9%9B%B6springboot%E6%A1%86%E6%9E%B6%E7%9A%84%E6%B8%97%E9%80%8F%E8%BF%87%E7%A8%8B">零：Spring—Boot框架的渗透过程</a></li>
+  <li><a href="#%E4%B8%80%E5%8E%86%E5%8F%B2spring-boot%E6%A1%86%E6%9E%B6%E6%B8%97%E9%80%8F">一：历史Spring Boot框架渗透</a>
+    <ul>
+      <li><a href="#1x01-%E9%87%91%E8%9E%8D%E8%A1%8C%E4%B8%9A%E6%9F%90%E9%93%B6%E8%A1%8C%E7%B3%BB%E7%BB%9F">1x01 金融行业某银行系统</a></li>
+    </ul>
+  </li>
+  <li><a href="#%E4%BA%8Cheapdump%E6%96%87%E4%BB%B6%E5%88%86%E6%9E%90%E5%8E%86%E7%A8%8B">二：HEAPDUMP文件分析历程</a>
+    <ul>
+      <li><a href="#2x01-%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7mat">2x01 分析工具MAT</a></li>
+      <li><a href="#2x02-%E5%88%86%E6%9E%90%E8%AF%AD%E6%B3%95">2x02 分析语法</a></li>
+    </ul>
+  </li>
+  <li><a href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5">参考链接</a></li>
+  <li><a href="#%E7%94%B3%E6%98%8E">申明</a></li>
+</ul>
+
+<hr />
+<p><strong>本文通过下面三个问题进行技术分享：</strong></p>
+<ul>
+  <li><strong>在哪些地方可以发现？关于SpringBoot的一些参考</strong>
+    <ul>
+      <li><a href="https://www.sentrylab.cn/blog/2020/Spring-boot/">Spring Boot框架渗透参考</a></li>
+    </ul>
+  </li>
+  <li><strong>发现了怎么找到她？heapdump文件下载路由</strong>
+    <ul>
+      <li>https://url-to-spring-boot-error/{sb-url}/heapdump</li>
+      <li>https://url-to-spring-boot-error/{sb-url}/actuator/heapdump</li>
+    </ul>
+  </li>
+  <li><strong>找到了怎么使用？文件分析</strong>
+    <ul>
+      <li>分析工具MAT</li>
+      <li>分析语法分析</li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="零springboot框架的渗透过程">零：Spring—Boot框架的渗透过程</h2>
+
+<p>上面已经给出相关访问url，文章中的转载地址也详细给出，一般能够识别Spring-Boot的框架特征就行了，不再赘述。本篇文章主要是针对heapdump文件进行分析；
+在这里做一下简单的介绍：</p>
+
+<ul>
+  <li>零：路由和版本
+    <ul>
+      <li>0x01：路由知识</li>
+      <li>0x02：版本知识</li>
+    </ul>
+  </li>
+  <li>一：信息泄露
+    <ul>
+      <li>0x01：路由地址及接口调用详情泄漏</li>
+      <li>0x02：配置不当而暴露的路由</li>
+      <li>0x03：获取被星号脱敏的密码的明文</li>
+    </ul>
+  </li>
+  <li>二：远程代码执行
+    <ul>
+      <li>0x01：whitelabel error page SpEL RCE</li>
+      <li>0x02：spring cloud SnakeYAML RCE</li>
+      <li>0x03：eureka xstream deserialization RCE</li>
+      <li>0x04：jolokia logback JNDI RCE</li>
+      <li>0x05：jolokia Realm JNDI RCE</li>
+      <li>0x06：h2 database query RCE</li>
+      <li>0x07：h2 database console JNDI RCE</li>
+      <li>0x08：mysql jdbc deserialization RCE</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="一历史spring-boot框架渗透">一：历史Spring Boot框架渗透</h2>
+<p>在简单认识Spring Boot框架后，至少在我看来，我们所需要了解的是框架的路由、特征信息，以方便我们来识别；当然，自己搭建一遍对于框架的认识自不必多说。
+而在我看来，仅仅一篇博客的简单描述并不能一言概全，而且由于安全行业的特殊性，我们更需要的是脚踏实地的实践精神，所以在此写下博客的同时，回忆SRC的相关案例；
+<strong>权当抛砖引玉</strong></p>
+
+<h3 id="1x01-金融行业某银行系统">1x01 金融行业某银行系统</h3>
+<p>由于时间较为久远，细节部分无法详尽贴出，但是不妨碍整体完整性；为了保护SRC平台客户隐私，所有的路由、ip全部都使用可理解的标签代替。见谅。
+SRC任务是泛域名，就是<code class="language-plaintext highlighter-rouge">*.src_target.{com}</code>，基本熟悉的就直接跑域名然后端口对应的服务这样子；</p>
+
+<ul>
+  <li>子域名发现
+    <ul>
+      <li>子域名整理</li>
+      <li>端口批量扫描</li>
+    </ul>
+  </li>
+  <li>域名端口批量服务发现
+    <ul>
+      <li>过程中发现某银行机构活动登录系统
+        <ul>
+          <li>1、登录数据包为json格式</li>
+          <li>2、登录系统端口为8080，后端验证系统服务开放端口为8086，路由如下：
+            <ul>
+              <li>登录：http://{Vuln_Address}:8080/user/login?redirect=%2F</li>
+              <li>验证数据交互：http://{Vuln_Address}:8086/{api_interface_url}/sys/login/</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>访问后端8086开放服务url：<code class="language-plaintext highlighter-rouge">http://{Vuln_Address}:8086/{api_interface_url}/</code>发现返回404，返回信息如下：</p>
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>json格式：
+{"timestamp":"2021-01-29T07:26:34.085+0000","status":404,"error":"Not Found","message":"No message available","path":"/"}
+
+html格式：
+<span class="nt">&lt;html&gt;&lt;body&gt;&lt;h1&gt;</span>Whitelabel Error Page<span class="nt">&lt;/h1&gt;&lt;p&gt;</span>This application has no explicit mapping for /error, so you are seeing this as a fallback.<span class="nt">&lt;/p&gt;&lt;div</span> <span class="na">id=</span><span class="s">'created'</span><span class="nt">&gt;</span>Fri Jan 29 15:25:38 CST 2021<span class="nt">&lt;/div&gt;&lt;div&gt;</span>
+There was an unexpected error (type=Not Found, status=404).<span class="nt">&lt;/div&gt;&lt;div&gt;</span>No message available<span class="nt">&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;</span>
+</code></pre></div></div>
+<p>很明显的SpringBoot框架，连路由都不需要爆破直接找未授权接口：</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>It<span class="s1">'s A Spring Boot Web APP: http://{Vuln_Address}:8086/
+目标站点开启了 env 端点的未授权访问,路径为：http://{Vuln_Address}:8086//actuator/env
+目标站点开启了 jolokia 端点的未授权访问,路径为：http://{Vuln_Address}:8086//actuator/jolokia/list
+目标站点开启了 jolokia 端点且存在createJNDIRealm方法,可进行JNDI注入RCE测试,路径为：http://{Vuln_Address}:8086//actuator/jolokia/list
+目标站点开启了 beans 端点的未授权访问,路径为：http://{Vuln_Address}:8086//actuator/beans
+目标站点开启了 configprops 端点的未授权访问,路径为：http://{Vuln_Address}:8086//actuator/configprops
+目标站点开启了 health 端点的未授权访问,路径为：http://{Vuln_Address}:8086//actuator/health
+目标站点开启了 info 端点的未授权访问,路径为：http://{Vuln_Address}:8086//actuator/info
+目标站点开启了 mappings 端点的未授权访问,路径为：http://{Vuln_Address}:8086//actuator/mappings
+目标站点开启了 metrics 端点的未授权访问,路径为：http://{Vuln_Address}:8086//actuator/metrics
+---
+It'</span>s A Spring Boot Web APP: http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url1<span class="o">}</span>/actuator
+目标站点开启了 <span class="nb">env </span>端点的未授权访问,路径为：http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url1<span class="o">}</span>/actuator/env
+目标站点开启了 jolokia 端点的未授权访问,路径为：http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url1<span class="o">}</span>/actuator/jolokia/list
+目标站点开启了 jolokia 端点且存在createJNDIRealm方法,可进行JNDI注入RCE测试,路径为：http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url1<span class="o">}</span>/actuator/jolokia/list
+目标站点开启了 beans 端点的未授权访问,路径为：http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url1<span class="o">}</span>/actuator/beans
+目标站点开启了 configprops 端点的未授权访问,路径为：http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url1<span class="o">}</span>/actuator/configprops
+目标站点开启了 health 端点的未授权访问,路径为：http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url1<span class="o">}</span>/actuator/health
+目标站点开启了 info 端点的未授权访问,路径为：http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url1<span class="o">}</span>/actuator/info
+目标站点开启了 mappings 端点的未授权访问,路径为：http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url1<span class="o">}</span>/actuator/mappings
+目标站点开启了 metrics 端点的未授权访问,路径为：http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url1<span class="o">}</span>/actuator/metrics
+<span class="nt">---</span>
+It<span class="s1">'s A Spring Boot Web APP: http://{Vuln_Address}:8086/{api_interface_url2}/actuator
+目标站点开启了 env 端点的未授权访问,路径为：http://{Vuln_Address}:8086/{api_interface_url2}/actuator/env
+目标站点开启了 jolokia 端点的未授权访问,路径为：http://{Vuln_Address}:8086/{api_interface_url2}/actuator/jolokia/list
+目标站点开启了 jolokia 端点且存在createJNDIRealm方法,可进行JNDI注入RCE测试,路径为：http://{Vuln_Address}:8086/{api_interface_url2}/actuator/jolokia/list
+目标站点开启了 beans 端点的未授权访问,路径为：http://{Vuln_Address}:8086/{api_interface_url2}/actuator/beans
+目标站点开启了 configprops 端点的未授权访问,路径为：http://{Vuln_Address}:8086/{api_interface_url2}/actuator/configprops
+目标站点开启了 health 端点的未授权访问,路径为：http://{Vuln_Address}:8086/{api_interface_url2}/actuator/health
+目标站点开启了 info 端点的未授权访问,路径为：http://{Vuln_Address}:8086/{api_interface_url2}/actuator/info
+目标站点开启了 mappings 端点的未授权访问,路径为：http://{Vuln_Address}:8086/{api_interface_url2}/actuator/mappings
+目标站点开启了 metrics 端点的未授权访问,路径为：http://{Vuln_Address}:8086/{api_interface_url2}/actuator/metrics
+</span></code></pre></div></div>
+<p>而我们从上面信息可知，存在的SpringBoot路由分别为：<code class="language-plaintext highlighter-rouge">根目录/</code>、<code class="language-plaintext highlighter-rouge">{api_interface_url1}</code>、<code class="language-plaintext highlighter-rouge">{api_interface_url2}</code>，所以言归正传，返回到我们的主角：heapdump
+下载路径即：</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/actuator/heapdump
+http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url1<span class="o">}</span>/actuator/heapdump
+http://<span class="o">{</span>Vuln_Address<span class="o">}</span>:8086/<span class="o">{</span>api_interface_url2<span class="o">}</span>/actuator/heapdump
+</code></pre></div></div>
+<p>当然，所有的渗透操作都是在此端口上进行；继续往下。</p>
+
+<hr />
+
+<h2 id="二heapdump文件分析历程">二：HEAPDUMP文件分析历程</h2>
+<p>文件信息如下：</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% file src-1520-heapdump
+src-1520-heapdump: Java HPROF dump, created Mon Oct 12 11:14:25 2020
+</code></pre></div></div>
+<p>File Viewer:</p>
+
+<p><img src="/static/web-image/HeapDUMP_file_viewer.png" alt="ALT" /></p>
+
+<h3 id="2x01-分析工具mat">2x01 分析工具MAT</h3>
+
+<blockquote>
+  <p>OQL是用于查询Java堆的类SQL查询语言。OQL允许过滤/选择从Java堆中获取的信息；
+虽然HAT已经支持预定义的查询，例如“显示类X的所有实例”，但OQL增加了更多的灵活性；
+OQL基于JavaScript表达式语言。</p>
+</blockquote>
+
+<p>打开MAT选择打开headump文件，打开加载完毕选择OQL执行；
+<img src="/static/web-image/mat-oql-exec.png" alt="截图1" /></p>
+
+<h3 id="2x02-分析语法">2x02 分析语法</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">select</span> <span class="o">&lt;</span><span class="nc">JavaScript</span> <span class="n">expression</span> <span class="n">to</span> <span class="n">select</span><span class="o">&gt;</span>
+<span class="o">[</span> <span class="n">from</span> <span class="o">[</span><span class="k">instanceof</span><span class="o">]</span> <span class="o">&lt;</span><span class="kd">class</span> <span class="nc">name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">identifier</span><span class="o">&gt;</span>
+<span class="o">[</span> <span class="n">where</span> <span class="o">&lt;</span><span class="nc">JavaScript</span> <span class="kt">boolean</span> <span class="n">expression</span> <span class="n">to</span> <span class="n">filter</span><span class="o">&gt;</span> <span class="o">]</span> <span class="o">]</span>
+</code></pre></div></div>
+<p>部分OQL分析语句实例展示：</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">select * from java.util.LinkedHashMap$Entry x WHERE (toString(x.key).contains("password"))</code>；
+    <ul>
+      <li>选择寻找hashmap中所有key元素中存在password值并展示出，如下所示自不必多说：
+<img src="/static/web-image/spring-boot-password.png" alt="截图1" /></li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">select * from org.springframework.web.context.support.StandardServletEnvironment</code>；
+    <ul>
+      <li>选择寻找所有StandardServletEnvironment并展示出，这一项中我们需要关注的是propertySourceList(简称PPSlist)，查找链如下：</li>
+      <li><code class="language-plaintext highlighter-rouge">PPS-PPSlis-array-org.springframework.core.env.PPS-source-tables</code>，tables中存储的即为我们所关注的敏感信息，如下所示：
+<img src="/static/web-image/spring-boot-pps-clains.png" alt="截图2" /></li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">select * from java.util.Hashtable$Entry x WHERE (toString(x.key).contains("password"))</code>；
+    <ul>
+      <li>选择寻找哈希表中所有key元素中存在password值并展示出：
+<img src="/static/web-image/spring-boot-contains-passwd.png" alt="截图3" /></li>
+    </ul>
+  </li>
+</ul>
+
+<p>以上。</p>
+
+<hr />
+<p>本文中展示的分析OQL语句实例供参考，实际可是写出的有很多，经过自己理解后可以自行尝试编写实践。</p>
+
+<h2 id="参考链接">参考链接</h2>
+
+<p><a href="https://www.cnblogs.com/ysocean/p/9839173.html#_label5">JDK1.8源码(九)——java.util.LinkedHashMap类</a></p>
+
+<p><a href="https://blog.csdn.net/justloveyou_/article/details/71713781">Map 综述（二）：彻头彻尾理解 LinkedHashMap</a></p>
+
+<p><a href="https://www.onebug.org/websafe/98955.html">MAT 查找 spring heapdump 中的密码明文</a></p>
+
+<h2 id="申明">申明</h2>
+
+<p>作者：Bin4xin</p>
+
+<p>转载请申明本文链接：<a href="/help/SpringBoot-Memory-files-heapdump-Analysis/">heapdump文件分析历程</a></p>

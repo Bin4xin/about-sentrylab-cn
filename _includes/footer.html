@@ -1,0 +1,43 @@
+{% for footer-i in (1..2) %}
+{% unless page.legacy and footer-i == 1 %}
+<div id="footerwrap" class="tuna-foot-{{ footer-i }}"{% if page.legacy %} style="visibility: visible;"{% endif %}>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-4 col-md-4{% if page.legacy %} col-xs-4{% endif %}">
+        <p class="thuhidden">本站由哨兵安全实验室支持创办</p>
+        <p class="thuhidden">个人感谢<em>@TUNA协会</em>的开源代码</p>
+        <p class="thuhidden">Powered by <a href="https://github.com/Bin4xin">Bin4xin</a> &amp; <a title="open code from TUNA mirror-web." href="https://github.com/tuna/mirror-web"><em>这里是开源代码库</em></a>.</p>
+        {% if site.footnote %}
+        <p class="thuhidden">{{ site.footnote }}</p>
+        {% endif %}
+      </div>
+      <div class="col-lg-4 col-md-4{% if page.legacy %} col-xs-4{% endif %}">
+        <h4>有个不成熟的建议？联系：</h4>
+        <div class="thuhidden">
+          <ul class="social">
+            <li>
+            <a><i class="fa fa-envelope"></i> chihou.pro@gmail.com</a>
+            </li>
+            <li>
+            <a href="https://github.com/Bin4xin/"><i class="fa fa-github"></i> GitHub </a>
+            </li>
+            </ul>
+        </div>
+
+
+
+        {% if site.sponsor %}
+        <<!-- h4>Sponsor</h4>
+         -->{% if site.sponsor == "megvii" %}
+        
+        {% endif %}
+        {% endif%}
+      </div>
+      <div class="col-lg-4 col-md-4{% if page.legacy %} col-xs-4{% endif %}">
+        <img class="img-responsive thuhidden center-block" style="margin-top:5%" src="/static/img/logo-white.png" srcset="/static/img/logo-white.png 1x, /static/img/logo-white@2x.png 2x, /static/img/logo-white@3x.png 3x, /static/img/logo-white@4x.png 4x" />
+      </div>
+    </div><!--/row -->
+  </div><!--/container -->
+</div><!--/footerwrap -->
+{% endunless %}
+{% endfor %}

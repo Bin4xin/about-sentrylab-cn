@@ -1,0 +1,57 @@
+<div class="navbar navbar-default" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      {% unless page.legacy %}
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      {% endunless %}
+			<a class="navbar-brand" href="/">
+				<span class="thuhidden">
+					{% if site.logo %}
+					<picture>
+						{% if site.issue %}
+						<img
+						{% else %}
+						<source 
+						{% endif %}
+							srcset="/static/img/logo-small-dark.png 1x,
+											/static/img/logo-small-dark@2x.png 2x,
+											/static/img/logo-small-dark@3x.png 3x,
+											/static/img/logo-small-dark@4x.png 4x"
+						{% if site.issue %}
+							alt=""/>
+						{% else %}
+							media="(prefers-color-scheme: dark)"/>
+						{% endif %}
+						{% unless site.issue %}
+						<img src="/static/img/logo-small.png" 
+							srcset="/static/img/logo-small.png 1x, 
+											/static/img/logo-small@2x.png 2x, 
+											/static/img/logo-small@3x.png 3x, 
+											/static/img/logo-small@4x.png 4x"
+							alt=""/>
+						{% endunless %}
+					</picture>
+					{% endif %}
+					{{ site.school }}</span>关于我的一些自述
+			</a>
+    </div>
+    <div class="{% unless page.legacy %}navbar-collapse collapse {% endunless %}navbar-right">
+      <ul class="nav navbar-nav" role="menubar">
+        {% unless site.hide_navbar %}
+        
+        <li role="none"><a role="menuitem" href="{{ site.homelink }}">HOME</a></li>
+        <li role="none"><a role="menuitem" href="{{ site.homelink }}/blog">BLOG</a></li>
+
+				<li><a href="http://wiki.sentrylab.cn">WIKI</a></li>
+        <li {% if page.permalink == "/" or page.categories contains "/" %}class="active"{% endif %}><a href="{{"/" | prepend: site.baseurl }}">ABOUT ME</a></li>
+        {% endunless %}
+       
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div>
+</div>

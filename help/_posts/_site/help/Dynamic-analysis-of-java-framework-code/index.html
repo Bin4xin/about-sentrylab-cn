@@ -1,0 +1,69 @@
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />debug基本用法介绍
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />debug的几个分类断点介绍</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />分类断点的使用</li>
+    </ul>
+  </li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />debug简单例子演示</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />以SHIRO框架来进行动态java代码调试分析</li>
+</ul>
+
+<h1 id="零debug-the-world">零：[debug] the world</h1>
+
+<h2 id="0x01debug的基本用法">0x01：debug的基本用法</h2>
+
+<h2 id="0x02debug实现line-breakpoints">0x02：debug实现line breakpoints</h2>
+<p>了解了怎么调试后，第一步：<code class="language-plaintext highlighter-rouge">debug the world</code>。</p>
+
+<ul>
+  <li>1.新建程序
+    <ul>
+      <li>打开开发软件(intelliJ IDEA或者eclipse)</li>
+      <li>新建project</li>
+      <li>new 一个 class</li>
+      <li>hello.java:
+        <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="kd">public</span> <span class="kd">class</span> <span class="nc">hello</span> <span class="o">{</span>
+    
+      <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+                    
+              <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"this is a block test message"</span><span class="o">);</span>
+              <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"hello world"</span><span class="o">);</span>
+    
+      <span class="o">}</span>
+  <span class="o">}</span>
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li>2.运行程序
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">${path-to-project}/hello/src/hello.java</code>-右键-<code class="language-plaintext highlighter-rouge">run hello.main()</code></li>
+      <li>console台输出即程序运行成功：
+        <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> ···
+ ···
+ this is a block <span class="nb">test </span>message
+ hello world
+       
+ Process finished with <span class="nb">exit </span>code 0
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li>3.调试程序
+    <ul>
+      <li>实现现象：
+        <ul>
+          <li>1)程序输出<code class="language-plaintext highlighter-rouge">this is a block test message</code>后停下</li>
+          <li>2)人工干预后输出<code class="language-plaintext highlighter-rouge">hello world</code></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>就这样我们就可以在对一个简单的java程序进行进程断点后，我们就能够对程序的输出的进度可控。</p>
+
+<h1 id="二断点用法">二：断点用法</h1>
+
+<h2 id="0x01">0x01：</h2>

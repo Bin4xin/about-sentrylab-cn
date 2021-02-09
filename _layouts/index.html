@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+	{% include head.html %}
+	<body>
+		{% unless page.legacy or site.issue %}
+		{% include legacy_notes.html %}
+		{% endunless %}
+		{% include nav.html %}
+		<div id="mirrors">
+			<div class="spacing hidden-xs"></div>
+			<div class="container">
+				<div class="row">
+					{% if site.issue %}
+					<div class="col-{% if page.legacy %}xs{% else %}md{% endif %}-12 table-responsive">
+						<div class="alert text-center" id="cover-alert">
+							<h1>{{ site.school }}博客站点</h1>
+							<h3>暂时无法提供服务</h3>
+							<div class="pull-right">
+								<img src="/static/img/candle.jpg" 
+									srcset="/static/img/candle.jpg 1x,
+													/static/img/candle@2x.jpg 2x"
+								/>
+							</div>
+							<div class="clearfix"></div>
+							<p>{{ site.issue }}</p>
+							{% if site.backtime %}
+							<p>预计恢复时间: {{ site.backtime }}</p>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					{% else %}
+					<div class="col-{% if page.legacy %}xs{% else %}md{% endif %}-8 table-responsive" id="mirror-list">
+						<div class="row">
+							<h3 id="mirror-title"><span class="fa fa-cube"></span> 近期研究 </h3>
+							{% unless page.legacy %}
+							<input type="search" v-model.trim="filter" id="search" placeholder="搜索" autocomplete="off">
+							{% endunless %}
+						</div>
+						<table class="table" v-if="mirrorList.length">
+							<thead>
+								<tr class="row">
+									<th class="col-{% if page.legacy %}xs{% else %}sm{% endif %}-8">Name</th>
+									<th class="col-{% if page.legacy %}xs{% else %}sm{% endif %}-4">Last Update</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% if page.legacy %}
+								{% raw %}
+								{{mirs}}
+								<tr class="row status-{{status}}">
+									<td>
+										<a class="mirror-item-label" href="{{url}}" title="{{description}}">
+											{{name}}
+										</a>
+										{{if is_new}}
+										<span class="label label-new">new</span>
+										{{/if}}
+										{{if help_url}}
+										<a href="{{help_url}}"><i aria-hidden="true" class="fa fa-question-circle" title="Help"></i><span class="sr-only">[Help]</span></a>
+										{{/if}}
+									</td>
+									<td>
+										{{last_update}}{{if show_status}}<span class="label label-status {{label}}">{{status}}</span>{{/if}}
+									</td>
+								</tr>
+								{{/mirs}}
+								{% endraw %}
+								{% else %}
+								{% raw %}
+								<tr v-for="mir in filteredMirrorList" :class="['row', 'status-'+mir.status]" :key="mir.name">
+									<td class="col-md-8">
+										<a class="mirror-item-label"  data-toggle="popover" data-trigger="hover" data-placement="right" 
+											:data-content="mir.description" :href="getURL(mir)" :aria-label="mir.name + ', ' + mir.description">
+											{{mir.name}}
+											<span class="label label-new" v-if='mir.is_new'>new</span>
+											<a v-if='mir.help_url' :href="mir.help_url"><i aria-hidden="true" class="fa fa-question-circle" title="Help"></i><span class="sr-only">[Help]</span></a>
+										</a>
+									</td>
+									<td class="col-md-4">
+										{{mir.last_update}}<span v-if="mir.show_status" :class="['label', 'label-status', mir.label, 'hidden-xs']">{{mir.status}}</span>
+									</td>
+								</tr>
+								{% endraw %}
+								{% endif %}
+							</tbody>
+						</table>
+						{% unless page.legacy %}
+						<div v-else class="sk-wave">
+							<div class="sk-rect sk-rect1"></div>
+							<div class="sk-rect sk-rect2"></div>
+							<div class="sk-rect sk-rect3"></div>
+							<div class="sk-rect sk-rect4"></div>
+							<div class="sk-rect sk-rect5"></div>
+						</div>
+						{% endunless %}
+					</div>
+					{% endif %}
+					{% unless site.issue %}
+					<div class="col-{% if page.legacy %}xs{% else %}md{% endif %}-4">
+						<div class="spacing hidden-xs"></div>
+						<div id="wizard">
+						</div>
+					{% endunless %}
+						<div id="news" {%if site.issue%}class="col-md-3"{%endif%}>
+							<h4><span class="fa fa-bullhorn"></span> 公告窗口 </h4>
+							<ul>
+								{% for news in site.categories.news limit: 3%}
+								<li><a href="/news/#{{news.slug}}"><strong>{{news.date | date: "%Y-%m-%d"}}</strong> {{news.title}}</a></li>
+								{% endfor %}
+							</ul>
+							<div class="text-right"><a href="/news/"> more <span class="fa fa-angle-double-right"></span> </a></div>
+						</div>
+						<div class="thuhidden {%if site.issue%}col-md-4{%endif%}">
+							<h4> <span class="fa fa-link"></span> 友链窗口 </h4>
+							<ul>
+								<li><a href="https://blog.csdn.net/qq_32171761">TRANCER</a> BLOG IN CSDN </li>
+								<li><a href="https://blog.csdn.net/weixin_41438728">Gyp1991</a> BLOG IN CSDN </li>
+								<li><a href="https://blog.csdn.net/weixin_45556536">SOMECAT</a> BLOG IN CSDN </li>
+							</ul>
+						</div>
+						
+						<div class="thuhidden {%if site.issue%}col-md-3{%endif%}">
+							<h4> <span class="fa fa-envelope-o"></span> 联系我们 </h4>
+							<ul>
+								<li><strong>意见反馈</strong> <br /> <a href="https://github.com/Bin4xin/bin4xin.github.io/issues">点我点我😳</a></li>
+								<li><strong>发送邮件</strong> <br /> <a>chihou.pro@gmail.com</a></li>
+								<li><strong>鱼屋在线</strong> <br /> <a href="https://fishroom.tuna.moe/log/tuna/today"> We All Talk;) </a></li>
+							</ul>
+						</div>
+						<div {%if site.issue%}class="col-md-2"{%endif%}>
+							<h4> <span class="fa fa-external-link"></span> 相关链接 </h4>
+							<ul>
+								<li><a href="/help/">近期研究</a></li>
+								<li><a href="/news/">公告页面</a></li>
+								{% unless site.issue %}
+								{% endunless %}
+							</ul>
+						</div>
+					{% unless site.issue %}
+					</div>
+					{% endunless %}
+				</div>
+			</div><!--/container -->
+		</div><!--/mirrors -->
+		{% include footer.html %}
+		{% unless page.legacy or site.issue %}
+
+		{% endunless %}
+	</body>
+	{% raw %}
+	{% endraw %}
+	{% unless page.legacy or site.issue %}
+	<script src="/static/js/index.js"></script>
+	<script src="/static/js/browser-update.js"></script>
+	{% endunless %}
+</html>
+<!--
+	vim: ts=2 sts=2 sw=2 noexpandtab
+-->

